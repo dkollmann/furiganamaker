@@ -1,44 +1,8 @@
 # requires mecab-python3, unidic, pykakasi
 import os, sys, shutil, unidic, pykakasi
-from instanceprv import InstancePrv
-from problem import Problem
-
-
-def is_kanji(ch: str) -> bool:
-	"""
-	Checks if a given character is a kanji or not.
-	:param ch: The character to check.
-	:return: Returns True when 'ch' is a kanji.
-	"""
-	n = ord(ch)
-
-	return (19968 <= n <= 40959) or n == 12293 or n == 12534
-
-
-def has_kanji(text: str) -> bool:
-	"""
-	Checks if a string has any kanji character in it.
-	:param text: The text to check.
-	:return: Returns True when any of the characters in 'text' is a kanji.
-	"""
-	for c in text:
-		if is_kanji(c):
-			return True
-
-	return False
-
-
-def all_kanji(text: str) -> bool:
-	"""
-	Checks if all characters of a string are kanji characters.
-	:param text: The text to check.
-	:return: Returns True when all of the characters in 'text' are kanji.
-	"""
-	for c in text:
-		if not is_kanji(c):
-			return False
-
-	return True
+from .instanceprv import InstancePrv
+from .problem import Problem
+from .utils import is_kanji, has_kanji, all_kanji
 
 
 class Reading:
@@ -86,33 +50,34 @@ class Instance(InstancePrv):
 
 	def init(self, additionalreadings: dict[str, Reading] = None, customreadings: tuple[CustomReading] = None):
 		if additionalreadings is not None:
-			for r in additionalreadings:
-				reading = additionalreadings[r]
+			for kanji in additionalreadings:
+				reading = additionalreadings[kanji]
+				assert isinstance(reading, Reading), "Expected type Reading!"
 				cached = []
 
 				if reading.on:
 					for k in reading.on:
-						h = self._kana2hira(self, k)
+						h = self._kana2hira(k)
 
 						cached.append((k, h))
 
 				if reading.kun:
 					for h in reading.kun:
-						k = self._hira2kana(self, h)
+						k = self._hira2kana(h)
 
 						cached.append((k, h))
 
-				self._addtocache(r, cached)
+				self._addtocache(kanji, cached)
 
 		if customreadings is not None:
-			for kanji, read in customreadings:
-				assert len(kanji) == len(read), "The reading must represent the exact parts of the kanji."
-				word = "".join(kanji)
+			for reading in customreadings:
+				assert isinstance(reading, CustomReading), "Expected CustomReading type!"
+				word = "".join(reading.on)
 
 				repl = self.customreadings_opentag
-				for i in range(len(kanji)):
-					k = kanji[i]
-					r = read[i]
+				for i in range(len(reading.on)):
+					k = reading.on[i]
+					r = reading.kun[i]
 
 					if is_kanji(k):
 						repl += k + self.opentag + r + self.closetag
