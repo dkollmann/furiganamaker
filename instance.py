@@ -1,5 +1,7 @@
 # requires mecab-python3, unidic, pykakasi
 import os, sys, shutil, unidic, pykakasi
+from instanceprv import InstancePrv
+from problem import Problem
 
 
 def is_kanji(ch: str) -> bool:
@@ -48,20 +50,22 @@ class Reading:
 		self.kun = kunreadings
 
 
-class Problem:
-	def __init__(self, description: str, kanji: str, userdata):
-		self.description = description
-		self.kanji = kanji
-		self.userdata = userdata
+class CustomReading:
+	def __init__(self, onreading: tuple[str], kunreading: tuple[str]):
+		assert isinstance(onreading, tuple), "Expected tuple for on readings. Did you for get a comma?"
+		assert isinstance(kunreading, tuple), "Expected tuple for kun readings. Did you for get a comma?"
+		assert len(onreading) == len(kunreading), "Both readings must have the same length as one is the translation of the other."
+
+		self.on = onreading
+		self.kun = kunreading
 
 
-class Instance:
-	def __init__(self, opentag: str, closetag: str, problems: list[Problem], kakasi: pykakasi.kakasi, mecabtagger = None, jamdict = None):
+class Instance(InstancePrv):
+	def __init__(self, opentag: str, closetag: str, kakasi: pykakasi.kakasi, mecabtagger = None, jamdict = None):
 		"""
 		Creates a new instance.
 		:param opentag: The tag used to mark the beginning of a furigana block.
 		:param closetag: The tag used to mark the end of a furigana block.
-		:param problems: A (empty) list where all problems are stored.
 		:param kakasi: The main libaryr used to generate the furigana readings and convert readings in general.
 		:param mecabtagger: An optional MeCab.Tagger() which can be used to get additional readings.
 		:param jamdict: An optional Jamdict() which can be used to get additional readings.
@@ -70,75 +74,55 @@ class Instance:
 		if not os.path.isfile(matrixpath):
 			raise Exception("Could not find \"" + matrixpath + "\". Did you run \"python -m unidic download\"? Might require admin rights.")
 
+		InstancePrv.__init__(self)
+
 		self.mecab = mecabtagger
 		self.kakasi = kakasi
 		self.jam = jamdict
 		self.opentag = opentag
 		self.closetag = closetag
-		self.readingscache = {}
-		self.customreadings = {}
 		self.customreadings_opentag = "<"
 		self.customreadings_closetag = ">"
-		self.problems = problems
 
-	def _kana2hira(self, kana: str) -> str:
-		conv = self.kakasi.convert(kana)
+	def init(self, additionalreadings: dict[str, Reading] = None, customreadings: tuple[CustomReading] = None):
+		if additionalreadings is not None:
+			for r in additionalreadings:
+				reading = additionalreadings[r]
+				cached = []
 
-		hira = ""
-		for c in conv:
-			hira += c["hira"]
+				if reading.on:
+					for k in reading.on:
+						h = self._kana2hira(self, k)
 
-		assert len(kana) == len(hira), "Expected both to be the same length"
+						cached.append((k, h))
 
-		return hira
+				if reading.kun:
+					for h in reading.kun:
+						k = self._hira2kana(self, h)
 
-	def _hira2kana(self, hira: str) -> str:
-		conv = self.kakasi.convert(hira)
+						cached.append((k, h))
 
-		kana = ""
-		for c in conv:
-			kana += c["kana"]
+				self._addtocache(r, cached)
 
-		assert len(kana) == len(hira), "Expected both to be the same length"
+		if customreadings is not None:
+			for kanji, read in customreadings:
+				assert len(kanji) == len(read), "The reading must represent the exact parts of the kanji."
+				word = "".join(kanji)
 
-		return kana
+				repl = self.customreadings_opentag
+				for i in range(len(kanji)):
+					k = kanji[i]
+					r = read[i]
 
-	def init(self, additionalreadings: dict[str, Reading], customreadings: tuple[tuple[str], tuple[str]]):
-		for r in additionalreadings:
-			reading = additionalreadings[r]
-			cached = []
+					if is_kanji(k):
+						repl += k + self.opentag + r + self.closetag
+					else:
+						repl += k
+				repl += self.customreadings_closetag
 
-			if reading.on:
-				for k in reading.on:
-					h = self._kana2hira(self, k)
+				self.customreadings[word] = repl
 
-					cached.append((k, h))
+		return True
 
-			if reading.kun:
-				for h in reading.kun:
-					k = self._hira2kana(self, h)
-
-					cached.append((k, h))
-
-			self.addtocache(r, cached)
-
-		for kanji, read in customreadings:
-			assert len(kanji) == len(read), "The reading must represent the exact parts of the kanji."
-			word = "".join(kanji)
-
-			repl = self.customreadings_opentag
-			for i in range(len(kanji)):
-				k = kanji[i]
-				r = read[i]
-
-				if is_kanji(k):
-					repl += k + self.opentag + r + self.closetag
-				else:
-					repl += k
-			repl += self.customreadings_closetag
-
-			self.customreadings[word] = repl
-
-	def _addtocache(self, kanji, cachedreadings):
-		sort = sorted(cachedreadings, key=lambda x: len(x[0]), reverse=True)
-		self.readingscache[kanji] = sort
+	def process(self, text: str, problems: list[Problem], userdata = None) -> tuple[bool, str]:
+		return self._process_text(text, problems, userdata)

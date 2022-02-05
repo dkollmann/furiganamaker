@@ -8,5 +8,17 @@ mecab = MeCab.Tagger()
 kakasi = pykakasi.kakasi()
 jam = Jamdict()
 
+additionalreadings = {
+
+}
+
+customreadings = {
+
+}
+
 problems = []
-maker = furiganamaker.Instance("{", "}", problems, kakasi, mecab, jam)
+maker = furiganamaker.Instance("{", "}", kakasi, mecab, jam)
+
+if maker.init(additionalreadings, customreadings):
+
+	maker.process("ffff", problems)
