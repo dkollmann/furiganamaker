@@ -146,6 +146,16 @@ class InstancePrv(InstanceData):
 				else:
 					node = node.next
 
+		# check pykakasi
+		conv = self.kakasi.convert(kanji)
+		for c in conv:
+			kana = c["kana"]
+
+			if not InstancePrv._has_reading_kana(foundreadings, kana):
+				hira = c["hira"]
+
+				foundreadings.append(CachedReading(kana, hira))
+
 		return self._addtocache(kanji, foundreadings)
 
 	def _find_reading(self, kanji: str, wordoriginal: str, wordkatakana: str, readings: list[str], problems: list[Problem], userdata) -> bool:

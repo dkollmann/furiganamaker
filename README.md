@@ -26,6 +26,22 @@ I could not find a library which allowed me to...
   - Handle URLs.
 
 
+## How to install this?
+This library can be installed using "pip install furiganamaker".</br>
+Then you need the data for unidic, so have to run "python -m unidic download".
+
+To use the library after installing it, you need to follow one or both of the following steps...
+
+
+### Using mecab-python3 (Fast but limited)
+- Run "pip install mecab-python3".
+
+
+### Using jamdict (Comprehensive but slow)
+- Run "pip install wheel", which is required for installing the data.
+- Run "pip install jamdict jamdict-data".
+
+
 ## Examples
 - Includes a simple example [example.py](https://github.com/dkollmann/furiganamaker/blob/main/example.py).
 - Includes an example to add furigana to a text file [example_textfile.py](https://github.com/dkollmann/furiganamaker/blob/main/example_textfile.py).
