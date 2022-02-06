@@ -1,12 +1,23 @@
 # requires mecab-python3, unidic, pykakasi
-import os, sys, shutil, unidic, pykakasi
-from .instanceprv import InstancePrv
+import os
+import pykakasi
+import unidic
+
+from .instanceprv import InstancePrv, CachedReading
 from .problem import Problem
-from .utils import is_kanji, has_kanji, all_kanji
+from .utils import is_kanji
 
 
 class Reading:
-	def __init__(self, onreadings, kunreadings):
+	"""
+	Represents the different readings for a given kanji.
+	"""
+	def __init__(self, onreadings: tuple[str], kunreadings: tuple[str]):
+		"""
+		Creates a reading for a kanji.
+		:param onreadings: The Chinese on readings in katakana.
+		:param kunreadings: The Japanese kun readings in hiragana.
+		"""
 		assert isinstance(onreadings, tuple), "Expected tuple for on readings. Did you for get a comma?"
 		assert isinstance(kunreadings, tuple), "Expected tuple for kun readings. Did you for get a comma?"
 
@@ -15,7 +26,16 @@ class Reading:
 
 
 class CustomReading:
+	"""
+	Represents a reading for a word, which can contain multiple kanjis.
+	"""
 	def __init__(self, onreading: tuple[str], kunreading: tuple[str]):
+		"""
+		Creates a reading for a word, allowing multiple kanjis.
+		Both readings must consist of a tuple containing the individual parts of the word.
+		:param onreading: The Chinese on readings in katakana.
+		:param kunreading: The Japanese kun readings in hiragana.
+		"""
 		assert isinstance(onreading, tuple), "Expected tuple for on readings. Did you for get a comma?"
 		assert isinstance(kunreading, tuple), "Expected tuple for kun readings. Did you for get a comma?"
 		assert len(onreading) == len(kunreading), "Both readings must have the same length as one is the translation of the other."
@@ -25,6 +45,9 @@ class CustomReading:
 
 
 class Instance(InstancePrv):
+	"""
+	This class implements all the private functions for Instance.
+	"""
 	def __init__(self, opentag: str, closetag: str, kakasi: pykakasi.kakasi, mecabtagger = None, jamdict = None):
 		"""
 		Creates a new instance.
@@ -48,46 +71,61 @@ class Instance(InstancePrv):
 		self.customreadings_opentag = "<"
 		self.customreadings_closetag = ">"
 
-	def init(self, additionalreadings: dict[str, Reading] = None, customreadings: tuple[CustomReading] = None):
-		if additionalreadings is not None:
-			for kanji in additionalreadings:
-				reading = additionalreadings[kanji]
-				assert isinstance(reading, Reading), "Expected type Reading!"
-				cached = []
+	def add_kanjireadings(self, additionalreadings: dict[str, Reading]):
+		"""
+		Adds readings for individual kanjis.
+		:param additionalreadings: This is a dictionary where for every kanji/key in it, there is a Reading object.
+		:return:
+		"""
+		for kanji in additionalreadings:
+			assert len(kanji) == 1, "Only individual kanji are supported. Use add_wordreadings to add readings for words."
+			reading = additionalreadings[kanji]
+			assert isinstance(reading, Reading), "Expected type Reading!"
+			cached = []
 
-				if reading.on:
-					for k in reading.on:
-						h = self._kana2hira(k)
+			if reading.on:
+				for k in reading.on:
+					h = self._kana2hira(k)
 
-						cached.append((k, h))
+					cached.append(CachedReading(k, h))
 
-				if reading.kun:
-					for h in reading.kun:
-						k = self._hira2kana(h)
+			if reading.kun:
+				for h in reading.kun:
+					k = self._hira2kana(h)
 
-						cached.append((k, h))
+					cached.append(CachedReading(k, h))
 
-				self._addtocache(kanji, cached)
+			self._addtocache(kanji, cached)
 
-		if customreadings is not None:
-			for reading in customreadings:
-				assert isinstance(reading, CustomReading), "Expected CustomReading type!"
-				word = "".join(reading.on)
+	def add_wordreadings(self, customreadings: tuple[CustomReading]):
+		"""
+		Adds a reading for a words.
+		:param customreadings: A list of readings for different words.
+		:return:
+		"""
+		for reading in customreadings:
+			assert isinstance(reading, CustomReading), "Expected CustomReading type!"
+			word = "".join(reading.on)
 
-				repl = self.customreadings_opentag
-				for i in range(len(reading.on)):
-					k = reading.on[i]
-					r = reading.kun[i]
+			repl = self.customreadings_opentag
+			for i in range(len(reading.on)):
+				k = reading.on[i]
+				r = reading.kun[i]
 
-					if is_kanji(k):
-						repl += k + self.opentag + r + self.closetag
-					else:
-						repl += k
-				repl += self.customreadings_closetag
+				if is_kanji(k):
+					repl += k + self.opentag + r + self.closetag
+				else:
+					repl += k
+			repl += self.customreadings_closetag
 
-				self.customreadings[word] = repl
-
-		return True
+			self.customreadings[word] = repl
 
 	def process(self, text: str, problems: list[Problem], userdata = None) -> tuple[bool, str]:
+		"""
+		Takes a string and adds furigana to it.
+		:param text: The text you want to add furigana to it.
+		:param problems: Any problem found during the processing is added here.
+		:param userdata: This data is added to any problem which was found, allowing you to trackback where the text came from, e.g. line in file.
+		:return: Returns a tuple (hasfurigana, processedtext), where hasfurigana tells you if furigana has been added and processedtext is the resulting text.
+		"""
 		return self._process_text(text, problems, userdata)

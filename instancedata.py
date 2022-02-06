@@ -1,4 +1,8 @@
 def katakana_vowels_init():
+	"""
+	Helper function which generates a dictionary where for ord(katakana), we get the katakana vowel. So ord(キ) provides 'イ'.
+	:return: the generated dictionary.
+	"""
 	result = {}
 
 	vowels = {
@@ -17,8 +21,14 @@ def katakana_vowels_init():
 
 
 class InstanceData:
+	"""
+	This class provides some pre-generated data for InstancePrv.
+	"""
+
+	""" A dictionary where for ord(katakana), we get the katakana vowel. So ord(キ) provides 'イ'. """
 	_katakana_vowels = katakana_vowels_init()
 
+	""" Maps a variant of a hiragana wording to its base wording. """
 	_basehiragana = {
 		"が": "か", "ざ": "さ", "だ": "た", "ば": "は", "ぱ": "は",
 		"ぎ": "き", "じ": "し", "ぢ": "ち", "び": "ひ", "ぴ": "ひ",
@@ -27,4 +37,5 @@ class InstanceData:
 		"ご": "こ", "ぞ": "そ", "ど": "と", "ぼ": "ほ", "ぽ": "ほ"
 	}
 
+	""" A list of most of the kanji numbers. Used to detect numbers. """
 	_kanjinumbers = ("一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "零")

@@ -1,33 +1,45 @@
 from .instancedata import InstanceData
 from .problem import Problem
-from .utils import is_kanji, has_kanji, all_kanji
+from .utils import is_kanji, has_kanji
+
+
+class CachedReading:
+	def __init__(self, katakana, hiragana):
+		self.katakana = katakana
+		self.hiragana = hiragana
 
 
 class InstancePrv(InstanceData):
+	"""
+	Base class of Instance which implements all the private functions.
+	"""
 	def __init__(self):
+		"""
+		Creates some default values for members.
+		"""
 		self.mecab = None
 		self.kakasi = None
 		self.jam = None
-		self.readingscache = {}
+		self.readingscache: dict[str, list[CachedReading]] = {}
 		self.customreadings = {}
 
 	@staticmethod
-	def _has_reading_kana(readings, newkana):
+	def _has_reading_kana(readings: list[CachedReading], newkana: str) -> bool:
 		for r in readings:
-			if r[0] == newkana:
+			if r.katakana == newkana:
 				return True
 
 		return False
 
 	@staticmethod
-	def _has_reading_hira(readings, newhira):
+	def _has_reading_hira(readings: list[CachedReading], newhira: str) -> bool:
 		for r in readings:
-			if r[1] == newhira:
+			if r.hiragana == newhira:
 				return True
 
 		return False
 
-	def _get_kanjireading(self, katakana, kanji):
+	def _get_kanjireading(self, katakana: str, kanji: str) -> list[CachedReading]:
 		if kanji in self.readingscache:
 			return self.readingscache[kanji]
 
@@ -47,7 +59,7 @@ class InstancePrv(InstanceData):
 					if not InstancePrv._has_reading_kana(foundreadings, k):
 						h = self._kana2hira(k)
 
-						foundreadings.append((k, h))
+						foundreadings.append(CachedReading(k, h))
 
 				kun_readings = data.chars[0].rm_groups[0].kun_readings
 				for r in kun_readings:
@@ -60,7 +72,7 @@ class InstancePrv(InstanceData):
 					if not InstancePrv._has_reading_hira(foundreadings, h):
 						k = self._hira2kana(h)
 
-						foundreadings.append((k, h))
+						foundreadings.append(CachedReading(k, h))
 
 		# check mecab
 		if self.mecab is not None:
@@ -75,7 +87,7 @@ class InstancePrv(InstanceData):
 						if len(kana) != len(katakana) and not InstancePrv._has_reading_kana(foundreadings, kana):
 							hira = self._kana2hira(kana)
 
-							foundreadings.append((kana, hira))
+							foundreadings.append(CachedReading(kana, hira))
 
 					node = node.bnext
 				else:
@@ -111,11 +123,11 @@ class InstancePrv(InstanceData):
 				return False
 
 			# try to match the kanji with the reading
-			for kana, hira in foundreadings:
-				if katakanaleft.startswith(kana):
+			for r in foundreadings:
+				if katakanaleft.startswith(r.katakana):
 					found = True
-					readings.append(hira)
-					katakanaleft = katakanaleft[len(kana):]
+					readings.append(r.hiragana)
+					katakanaleft = katakanaleft[len(r.katakana):]
 					break
 
 			# when one kanji fails we have to abort
@@ -263,8 +275,8 @@ class InstancePrv(InstanceData):
 
 		return kana
 
-	def _addtocache(self, kanji, cachedreadings):
-		sort = sorted(cachedreadings, key=lambda x: len(x[0]), reverse=True)
+	def _addtocache(self, kanji: str, cachedreadings: list[CachedReading]):
+		sort = sorted(cachedreadings, key=lambda x: len(x.katakana), reverse=True)
 		self.readingscache[kanji] = sort
 
 	@staticmethod
