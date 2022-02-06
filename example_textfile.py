@@ -1,3 +1,12 @@
+"""
+furiganamaker example
+Copyright (C) 2022  Daniel Kollmann
+
+Use of this source code is governed by an MIT-style
+license that can be found in the LICENSE file or at
+https://opensource.org/licenses/MIT.
+"""
+
 # requires mecab-python3, unidic, pykakasi, jamdict, wheel, jamdict-data package
 import os
 import sys
