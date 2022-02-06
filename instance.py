@@ -8,7 +8,7 @@ from .problem import Problem
 from .utils import is_kanji
 
 
-class Reading:
+class KanjiReading:
 	"""
 	Represents the different readings for a given kanji.
 	"""
@@ -25,7 +25,7 @@ class Reading:
 		self.kun = kunreadings
 
 
-class CustomReading:
+class WordReading:
 	"""
 	Represents a reading for a word, which can contain multiple kanjis.
 	"""
@@ -71,16 +71,16 @@ class Instance(InstancePrv):
 		self.customreadings_opentag = "<"
 		self.customreadings_closetag = ">"
 
-	def add_kanjireadings(self, additionalreadings: dict[str, Reading]):
+	def add_kanjireadings(self, additionalreadings: dict[str, KanjiReading]):
 		"""
 		Adds readings for individual kanjis.
-		:param additionalreadings: This is a dictionary where for every kanji/key in it, there is a Reading object.
+		:param additionalreadings: This is a dictionary where for every kanji/key in it, there is a KanjiReading object.
 		:return:
 		"""
 		for kanji in additionalreadings:
 			assert len(kanji) == 1, "Only individual kanji are supported. Use add_wordreadings to add readings for words."
 			reading = additionalreadings[kanji]
-			assert isinstance(reading, Reading), "Expected type Reading!"
+			assert isinstance(reading, KanjiReading), "Expected type KanjiReading!"
 			cached = []
 
 			if reading.on:
@@ -97,14 +97,14 @@ class Instance(InstancePrv):
 
 			self._addtocache(kanji, cached)
 
-	def add_wordreadings(self, customreadings: tuple[CustomReading]):
+	def add_wordreadings(self, customreadings: tuple[WordReading]):
 		"""
 		Adds a reading for a words.
 		:param customreadings: A list of readings for different words.
 		:return:
 		"""
 		for reading in customreadings:
-			assert isinstance(reading, CustomReading), "Expected CustomReading type!"
+			assert isinstance(reading, WordReading), "Expected WordReading type!"
 			word = "".join(reading.on)
 
 			repl = self.customreadings_opentag
