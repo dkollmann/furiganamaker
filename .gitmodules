@@ -1,0 +1,4 @@
+[submodule "furiganamaker"]
+	path = furiganamaker
+	url = https://github.com/dkollmann/furiganamaker.git
+	branch = main
