@@ -423,6 +423,44 @@ class InstancePrv(InstanceData):
 
 		return result
 
+	@staticmethod
+	def _split_urls(textparts: list[tuple[str, bool]]) -> list[tuple[str, bool]]:
+		i = 0
+		while i < len(textparts):
+			t, iscust = textparts[i]
+
+			if iscust:
+				i += 1
+				continue
+
+			pos = t.find("://")
+			if pos < 0:
+				i += 1
+				continue
+
+			# find start
+			a = pos - 1
+			while a >= 0 and not t[a].isspace():
+				a -= 1
+
+			# find end
+			b = pos + 3
+			while b < len(t) and not t[b].isspace():
+				b += 1
+
+			prefix = t[:a+1]
+			url = t[a+1:b]
+			postfix = t[b:]
+
+			# adjust the textparts
+			textparts[i] = (prefix, False)
+			textparts.insert(i + 1, (url, True))
+			textparts.insert(i + 2, (postfix, False))
+
+			i += 2
+
+		return textparts
+
 	def _process_textpart(self, text: str, problems: list[Problem], userdata) -> tuple[bool, str]:
 		"""
 		Adds furigana to a given text. The difference to _process_text() is that _process_text() applies custom word readings.
@@ -530,6 +568,8 @@ class InstancePrv(InstanceData):
 			text2 = t
 
 		textparts = InstancePrv._split_custreadtags(text2, self.customreadings_opentag, self.customreadings_closetag)
+
+		textparts = InstancePrv._split_urls(textparts)
 
 		textparts2 = []
 		for t, iscust in textparts:
