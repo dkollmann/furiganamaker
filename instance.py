@@ -70,7 +70,7 @@ class Instance(InstancePrv):
 		self.opentag = opentag
 		self.closetag = closetag
 
-	def add_kanjireadings(self, additionalreadings: dict[str, KanjiReading]):
+	def add_kanjireadings(self, additionalreadings: dict[str, KanjiReading]) -> None:
 		"""
 		Adds readings for individual kanjis.
 		:param additionalreadings: This is a dictionary where for every kanji/key in it, there is a KanjiReading object.
@@ -96,7 +96,7 @@ class Instance(InstancePrv):
 
 			self._addtocache(kanji, cached)
 
-	def add_wordreadings(self, customreadings: Sequence[WordReading]):
+	def add_wordreadings(self, customreadings: Sequence[WordReading]) -> None:
 		"""
 		Adds a reading for a words.
 		:param customreadings: A list of readings for different words.

@@ -128,9 +128,7 @@ class InstancePrv(InstanceData):
 				else:
 					node = node.next
 
-		self._addtocache(kanji, foundreadings)
-
-		return foundreadings
+		return self._addtocache(kanji, foundreadings)
 
 	def _find_reading(self, kanji: str, katakana: str, readings: list[str], problems: list[Problem], userdata) -> bool:
 		"""
@@ -347,15 +345,18 @@ class InstancePrv(InstanceData):
 
 		return kana
 
-	def _addtocache(self, kanji: str, cachedreadings: list[CachedReading]) -> None:
+	def _addtocache(self, kanji: str, cachedreadings: list[CachedReading]) -> list[CachedReading]:
 		"""
-		Adds a reading to the cache. The main use of this function is sorting the readings before adding them.
+		Adds a reading to the cache. The main use of this function is sorting the readings before adding them. This is very important!!
 		:param kanji: The kanji to add readings for.
 		:param cachedreadings: The list of readings.
-		:return:
+		:return: Returns 'cachedreadings', but sorted by length.
 		"""
 		sort = sorted(cachedreadings, key=lambda x: len(x.katakana), reverse=True)
+
 		self.readingscache[kanji] = sort
+
+		return sort
 
 	@staticmethod
 	def _fix_longvowels(original: str, katakana: str) -> str:
