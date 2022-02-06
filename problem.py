@@ -31,7 +31,10 @@ class Problems:
 		"""
 		for i in range(min(limit, len(problems))):
 			p = problems[i]
-			print(str(p.userdata) + ": " + p.description)
+			if p.userdata is not None:
+				print(str(p.userdata) + ": " + p.description)
+			else:
+				print(p.description)
 		print("Found " + str(len(problems)) + " problems...")
 
 	@staticmethod
@@ -71,6 +74,9 @@ class Problems:
 		for p in problems:
 			if p.kanji == kanji:
 				i += 1
-				print(str(p.userdata) + ": " + p.description)
+				if p.userdata is not None:
+					print(str(p.userdata) + ": " + p.description)
+				else:
+					print(p.description)
 				if i >= limit:
 					break
