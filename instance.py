@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 from typing import Sequence
 import pykakasi
-import unidic
 
 from .instanceprv import InstancePrv, CachedReading
 from .problem import Problem
@@ -80,9 +79,11 @@ class Instance(InstancePrv):
 		:param mecabtagger: An optional MeCab.Tagger() which can be used to get additional readings.
 		:param jamdict: An optional Jamdict() which can be used to get additional readings.
 		"""
-		matrixpath = os.path.join(unidic.DICDIR, "matrix.bin")
-		if not os.path.isfile(matrixpath):
-			raise Exception("Could not find \"" + matrixpath + "\". Did you run \"python -m unidic download\"? Might require admin rights.")
+		if mecabtagger:
+			import unidic
+			matrixpath = os.path.join(unidic.DICDIR, "matrix.bin")
+			if not os.path.isfile(matrixpath):
+				raise Exception("Could not find \"" + matrixpath + "\". Did you run \"python -m unidic download\"? Might require admin rights.")
 
 		InstancePrv.__init__(self)
 

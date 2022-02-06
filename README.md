@@ -27,15 +27,14 @@ I could not find a library which allowed me to...
 
 
 ## How to install this?
-This library can be installed using "pip install furiganamaker".</br>
-Then you need the data for unidic, so have to run "python -m unidic download".
+This library can be installed using "pip install furiganamaker".
 
 To use the library after installing it, you need to follow one or both of the following steps...
 
 
 ### Using mecab-python3 (Fast but limited)
-- Run "pip install mecab-python3".
-
+- Run "pip install mecab-python3 unidic".
+- Then you need the data for unidic, so have to run "python -m unidic download".
 
 ### Using jamdict (Comprehensive but slow)
 - Run "pip install wheel", which is required for installing the data.
