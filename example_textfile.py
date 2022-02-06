@@ -21,12 +21,12 @@ jam = Jamdict()
 
 # add your own readings, for example from jisho.org. These readings override automatically determined readings.
 kanjireadings = {
-	#"応": furiganamaker.KanjiReading(("オウ", "ヨウ", "ノウ"), ("あた", "まさに", "こた"))  # from https://jisho.org/search/%E5%BF%9C%20%23kanji
+	"戸": furiganamaker.KanjiReading(("コ",), ("と", "ど"))  # from https://jisho.org/search/%E6%88%B8%20%23kanji
 }
 
 # add readings for words, when the automatic readings are incorrrect
 wordreadings = [
-	#furiganamaker.WordReading(("真", "の", "戦", "士"), ("しん", "の", "せん", "し"))  # read 真の戦士 as しんのせんし. Turns into 真[しん]の戦[せん]士[し].
+	furiganamaker.WordReading(("行", "灯", "の", "油"), ("あん", "どん", "の", "あぶら"))  # read 行灯の油 as あんどんのあぶら. Turns into 行[あん]灯[どん]の油[あぶら].
 ]
 
 maker = furiganamaker.Instance("[", "]", kakasi, mecab, jam)  # tags furigana as "kanji[furigana]"
@@ -43,8 +43,8 @@ with open("example_textfile_input.txt", "r", encoding="utf8") as f:
 # add furigana
 problems = []
 furiganalines = []
-for line in lines:
-	hasfurigana, furiganatext = maker.process(line, problems)
+for i in range(len(lines)):
+	hasfurigana, furiganatext = maker.process(lines[i], problems, "Line " + str(i+1))
 
 	furiganalines.append(furiganatext)
 

@@ -442,6 +442,11 @@ class InstancePrv(InstanceData):
 
 			assert len(hira) == len(kana), "Expected both to be the same length"
 
+			# handle new lines
+			if orig.endswith("\n"):
+				result += orig
+				continue
+
 			# handle the case of an untranslated kanji
 			if len(hira) < 1:
 				problems.append(Problem("Failed to translate '" + orig + "'.", orig, userdata))
