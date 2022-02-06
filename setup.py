@@ -10,6 +10,8 @@ setup(
 	url = 'https://github.com/dkollmann/furiganamaker',   # Provide either the link to your github or to your website
 	download_url = 'https://github.com/dkollmann/furiganamaker/archive/refs/tags/1.0.tar.gz',    # I explain this later on
 	keywords = ['furigana', 'japanese', 'kanji', 'mecab', 'pykakasi', 'kakasi', 'jamdict'],   # Keywords that define your package best
+	package_data={'': ['example_textfile_input.txt']},
+	include_package_data=True,
 	install_requires=[            # I get to this in a second
 		'mecab-python3',
 		'unidic',
