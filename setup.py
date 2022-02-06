@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
 	name = 'furiganamaker',
 	packages = ['furiganamaker'],
-	version = '1.0',
+	version = '1.0.2',
 	license = 'gpl-3.0',
 	description = 'This library allows you to add furigana to Japanese kanji.',
 	author = 'Daniel Kollmann',
@@ -14,8 +14,6 @@ setup(
 	package_data = {'': ['example_textfile_input.txt']},
 	include_package_data = True,
 	install_requires = [
-		'mecab-python3',
-		'unidic',
 		'pykakasi',
 	],
 	classifiers = [

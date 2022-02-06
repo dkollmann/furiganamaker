@@ -1,5 +1,7 @@
 __pycache__/
 dist/
 test/
+.idea/
+venv/
 
 example_textfile_output.txt
