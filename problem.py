@@ -60,7 +60,7 @@ class Problems:
 		"""
 		Prints all problems found for each kanji with a problem. Sorted by the number of problems.
 		:param problems: The list of problems after calling Instance.process().
-		:return: The list of kanjis with problems, sorted by the number of problems
+		:return: The list of kanjis with problems, sorted by the number of problems.
 		"""
 		counted = {}
 		for p in problems:

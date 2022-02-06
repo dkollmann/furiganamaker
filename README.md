@@ -64,3 +64,25 @@ Adds furigana to a given text. Gets a list of where to store all problems that h
 - problems - Any problem found during the processing is added here.
 - userdata - This data is added to any problem which was found, allowing you to trackback where the text came from, e.g. line in file.
 - Returns a tuple (hasfurigana, processedtext), where hasfurigana tells you if furigana has been added and processedtext is the resulting text.
+
+
+### Problems.print_all(problems: list[Problem], limit: int = 100000)
+Prints all found problems on the screen.
+
+- problems - The list of problems after calling Instance.process().
+- limit - Limit the number of problems listed.
+
+
+### Problems.print_kanjiproblems_list(problems: list[Problem])
+Prints all problems found for each kanji with a problem. Sorted by the number of problems.
+
+- problems - The list of problems after calling Instance.process().
+- Returns the list of kanjis with problems, sorted by the number of problems.
+
+
+### Problems.print_kanjiproblems(problems: list[Problem], kanji: str, limit: int = 10)
+Prints all problems for a specific kanji.
+
+- problems - The list of problems after calling Instance.process().
+- kanji - The kanji to print problems for.
+- limit - Limit the number of problems being printed.
