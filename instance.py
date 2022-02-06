@@ -1,5 +1,6 @@
 # requires mecab-python3, unidic, pykakasi
 import os
+from typing import Sequence
 import pykakasi
 import unidic
 
@@ -12,14 +13,14 @@ class KanjiReading:
 	"""
 	Represents the different readings for a given kanji.
 	"""
-	def __init__(self, onreadings: tuple[str], kunreadings: tuple[str]):
+	def __init__(self, onreadings: Sequence[str], kunreadings: Sequence[str]):
 		"""
 		Creates a reading for a kanji.
 		:param onreadings: The Chinese on readings in katakana.
 		:param kunreadings: The Japanese kun readings in hiragana.
 		"""
-		assert isinstance(onreadings, tuple), "Expected tuple for on readings. Did you for get a comma?"
-		assert isinstance(kunreadings, tuple), "Expected tuple for kun readings. Did you for get a comma?"
+		assert isinstance(onreadings, tuple) or isinstance(onreadings, list), "Expected tuple or list for on readings. Did you for get a comma?"
+		assert isinstance(kunreadings, tuple) or isinstance(kunreadings, list), "Expected tuple or list for kun readings. Did you for get a comma?"
 
 		self.on = onreadings
 		self.kun = kunreadings
@@ -29,15 +30,15 @@ class WordReading:
 	"""
 	Represents a reading for a word, which can contain multiple kanjis.
 	"""
-	def __init__(self, onreading: tuple[str], kunreading: tuple[str]):
+	def __init__(self, onreading: Sequence[str], kunreading: Sequence[str]):
 		"""
 		Creates a reading for a word, allowing multiple kanjis.
 		Both readings must consist of a tuple containing the individual parts of the word.
 		:param onreading: The Chinese on readings in katakana.
 		:param kunreading: The Japanese kun readings in hiragana.
 		"""
-		assert isinstance(onreading, tuple), "Expected tuple for on readings. Did you for get a comma?"
-		assert isinstance(kunreading, tuple), "Expected tuple for kun readings. Did you for get a comma?"
+		assert isinstance(onreading, tuple) or isinstance(onreading, list), "Expected tuple or list for on readings. Did you for get a comma?"
+		assert isinstance(kunreading, tuple) or isinstance(kunreading, list), "Expected tuple or list for kun readings. Did you for get a comma?"
 		assert len(onreading) == len(kunreading), "Both readings must have the same length as one is the translation of the other."
 
 		self.on = onreading
@@ -68,8 +69,6 @@ class Instance(InstancePrv):
 		self.jam = jamdict
 		self.opentag = opentag
 		self.closetag = closetag
-		self.customreadings_opentag = "<"
-		self.customreadings_closetag = ">"
 
 	def add_kanjireadings(self, additionalreadings: dict[str, KanjiReading]):
 		"""
@@ -97,7 +96,7 @@ class Instance(InstancePrv):
 
 			self._addtocache(kanji, cached)
 
-	def add_wordreadings(self, customreadings: tuple[WordReading]):
+	def add_wordreadings(self, customreadings: Sequence[WordReading]):
 		"""
 		Adds a reading for a words.
 		:param customreadings: A list of readings for different words.

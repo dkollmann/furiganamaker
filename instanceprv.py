@@ -4,7 +4,16 @@ from .utils import is_kanji, has_kanji
 
 
 class CachedReading:
+	"""
+	An entry for the readings cache to improve performance.
+	"""
+
 	def __init__(self, katakana, hiragana):
+		"""
+		Creates a new cache entry.
+		:param katakana: The reading in katakana.
+		:param hiragana: The reading in furigana.
+		"""
 		self.katakana = katakana
 		self.hiragana = hiragana
 
@@ -13,6 +22,7 @@ class InstancePrv(InstanceData):
 	"""
 	Base class of Instance which implements all the private functions.
 	"""
+
 	def __init__(self):
 		"""
 		Creates some default values for members.
@@ -20,28 +30,52 @@ class InstancePrv(InstanceData):
 		self.mecab = None
 		self.kakasi = None
 		self.jam = None
+		self.opentag: str = ""
+		self.closetag: str = ""
+		self.customreadings_opentag: str = "<"
+		self.customreadings_closetag: str = ">"
 		self.readingscache: dict[str, list[CachedReading]] = {}
-		self.customreadings = {}
+		self.customreadings: dict[str, str] = {}
 
 	@staticmethod
-	def _has_reading_kana(readings: list[CachedReading], newkana: str) -> bool:
+	def _has_reading_kana(readings: list[CachedReading], katakana: str) -> bool:
+		"""
+		Checks if there is already a reading, based on katakana.
+		:param readings: The list of readings to check.
+		:param katakana: The katakana to search for.
+		:return: Returns true when 'readings' contains an entry for 'katakana'.
+		"""
 		for r in readings:
-			if r.katakana == newkana:
+			if r.katakana == katakana:
 				return True
 
 		return False
 
 	@staticmethod
-	def _has_reading_hira(readings: list[CachedReading], newhira: str) -> bool:
+	def _has_reading_hira(readings: list[CachedReading], hiragana: str) -> bool:
+		"""
+		Checks if there is already a reading, based on hiragana.
+		:param readings: The list of readings to check.
+		:param hiragana: The hiragana to search for.
+		:return: Returns true when 'readings' contains an entry for 'hiragana'.
+		"""
 		for r in readings:
-			if r.hiragana == newhira:
+			if r.hiragana == hiragana:
 				return True
 
 		return False
 
-	def _get_kanjireading(self, katakana: str, kanji: str) -> list[CachedReading]:
+	def _get_kanjireading(self, kanji: str, katakana: str = None) -> list[CachedReading]:
+		"""
+		Gets a reading for a kanji. Uses the cache to improve performance.
+		:param kanji: The kanji to find a reading for.
+		:param katakana: The katakana of the complete word the kanji is part of. Only needed when using mecab.
+		:return: A list of readings for 'kanji'.
+		"""
 		if kanji in self.readingscache:
 			return self.readingscache[kanji]
+
+		assert len(kanji) == 1, "Has to be a single kanji"
 
 		foundreadings = []
 
@@ -76,6 +110,7 @@ class InstancePrv(InstanceData):
 
 		# check mecab
 		if self.mecab is not None:
+			assert katakana is not None, "When using mecab, we need the katakana to avoid using the reading of the complete word."
 			node = self.mecab.parseToNode(kanji + "一")  # this is a hack to get the Chinese reading
 			while node:
 				if len(node.surface) > 0:
@@ -97,7 +132,16 @@ class InstancePrv(InstanceData):
 
 		return foundreadings
 
-	def _find_reading(self, kanji, katakana, readings, problems, userdata):
+	def _find_reading(self, kanji: str, katakana: str, readings: list[str], problems: list[Problem], userdata) -> bool:
+		"""
+		Finds a reading for a kanji.
+		:param kanji: The kanji to find a reading for.
+		:param katakana: The katakana of the complete word the kanji is part of. Only needed when using mecab.
+		:param readings: The list of readings that have been found.
+		:param problems: The list of problems that occured.
+		:param userdata: The user data added to found problems.
+		:return: Returns true when readings could be found.
+		"""
 		showproblem = True
 
 		# check if this is a number
@@ -115,7 +159,7 @@ class InstancePrv(InstanceData):
 			found = False
 
 			# check if we have an additional reading for this
-			foundreadings = self._get_kanjireading(katakana, k)
+			foundreadings = self._get_kanjireading(k, katakana)
 
 			# check if we found something
 			if len(foundreadings) < 1:
@@ -145,7 +189,12 @@ class InstancePrv(InstanceData):
 		return True
 
 	@staticmethod
-	def _split_kanji(kanji):
+	def _split_kanji(kanji: str) -> list[tuple[str, bool]]:
+		"""
+		Splits a string with multiple letters into blocks of kanjis.
+		:param kanji: The text to split.
+		:return: Returns a list where 'text' was split into parts of (text, iskanji).
+		"""
 		result = []
 
 		start = 0
@@ -172,7 +221,13 @@ class InstancePrv(InstanceData):
 		return result
 
 	@staticmethod
-	def _split_katakana(hiraganasplit, katakana):
+	def _split_katakana(hiraganasplit: list[tuple[str, bool]], katakana: str) -> list[tuple[str, bool]]:
+		"""
+		Splits katakana into the same parts as a hiragana.
+		:param hiraganasplit: The output of _split_hiragana().
+		:param katakana: The katakana to split.
+		:return: A list like 'hiraganasplit' but for 'katakana'.
+		"""
 		# sanity check first
 		ln = 0
 		for t, ik in hiraganasplit:
@@ -192,7 +247,14 @@ class InstancePrv(InstanceData):
 		return result
 
 	@staticmethod
-	def _split_hiragana(kanjisplit, hiragana, katakana):
+	def _split_hiragana(kanjisplit: list[tuple[str, bool]], hiragana: str, katakana: str) -> list[tuple[str, bool]]:
+		"""
+		Splits hiragana based on the split word with kanji characters.
+		:param kanjisplit: The output of _split_kanji().
+		:param hiragana: The hiragana representing the concat string of 'kanjisplit'.
+		:param katakana: The katakana representing the concat string of 'kanjisplit'.
+		:return: A list like 'kanjisplit' but for 'hiragana'.
+		"""
 		result = []
 
 		# the conversion to hiragana will also convert any katakana, so we have to reverse this
@@ -254,6 +316,11 @@ class InstancePrv(InstanceData):
 		return result
 
 	def _kana2hira(self, kana: str) -> str:
+		"""
+		Converts katakana to hiragana.
+		:param kana: The katakana to convert.
+		:return: Returns the hiragana translation.
+		"""
 		conv = self.kakasi.convert(kana)
 
 		hira = ""
@@ -265,6 +332,11 @@ class InstancePrv(InstanceData):
 		return hira
 
 	def _hira2kana(self, hira: str) -> str:
+		"""
+		Converts hiragana to katakana.
+		:param hira: The hiragana to convert.
+		:return: Returns the katakana translation.
+		"""
 		conv = self.kakasi.convert(hira)
 
 		kana = ""
@@ -275,12 +347,24 @@ class InstancePrv(InstanceData):
 
 		return kana
 
-	def _addtocache(self, kanji: str, cachedreadings: list[CachedReading]):
+	def _addtocache(self, kanji: str, cachedreadings: list[CachedReading]) -> None:
+		"""
+		Adds a reading to the cache. The main use of this function is sorting the readings before adding them.
+		:param kanji: The kanji to add readings for.
+		:param cachedreadings: The list of readings.
+		:return:
+		"""
 		sort = sorted(cachedreadings, key=lambda x: len(x.katakana), reverse=True)
 		self.readingscache[kanji] = sort
 
 	@staticmethod
-	def _fix_longvowels(original, katakana):
+	def _fix_longvowels(original: str, katakana: str) -> str:
+		"""
+		Replaces hiragana long vowels, written in katakana, with 'ー'.
+		:param original: The original text we check for 'ー'.
+		:param katakana: The katakana where 'ー' has been replaced with vowel characters.
+		:return: Returns 'katakana' but with long vowels written with 'ー'.
+		"""
 		# when the original string uses a 'ー' character, it is lost during the conversion to katakana, so we restore it
 		pos = original.find("ー")
 
@@ -300,7 +384,14 @@ class InstancePrv(InstanceData):
 		return katakana
 
 	@staticmethod
-	def _split_custreadtags(text, opentag, closetag):
+	def _split_custreadtags(text: str, opentag: str, closetag: str) -> list[tuple[str, bool]]:
+		"""
+		Splits a text based on the word readings that have been applied.
+		:param text: The text that has word readings in it.
+		:param opentag: The tag marking a word reading beginning.
+		:param closetag: The tag to marking a word reading end.
+		:return: Returns a list where 'text' was split into parts of (text, iswordreading).
+		"""
 		result = []
 
 		start = 0
@@ -331,6 +422,13 @@ class InstancePrv(InstanceData):
 		return result
 
 	def _process_textpart(self, text: str, problems: list[Problem], userdata) -> tuple[bool, str]:
+		"""
+		Adds furigana to a given text. The difference to _process_text() is that _process_text() applies custom word readings.
+		:param text: The text to add furigana to.
+		:param problems: The problems that have been found.
+		:param userdata: The user data added to every problem found.
+		:return: Returns a tuple (hasfurigana, text). When no furigana has been added, 'hasfurigana' is False.
+		"""
 		assert self.kakasi is not None, "An kakasi instance is required."
 
 		result = ""
@@ -366,11 +464,12 @@ class InstancePrv(InstanceData):
 				split_kana = InstancePrv._split_katakana(split_hira, kana)
 			else:
 				assert split_kanjis[0][1], "This must be a kanji element"
-				split_hira = [ (hira, True) ]
-				split_kana = [ (kana, True) ]
+				split_hira = [(hira, True)]
+				split_kana = [(kana, True)]
 
 			# for each kanji block, try to match the individual hiragana
 			s = ""
+			readings = []
 			for i in range(len(split_kanjis)):
 				kanji = split_kanjis[i][0]
 				iskanji = split_kanjis[i][1]
@@ -396,9 +495,16 @@ class InstancePrv(InstanceData):
 
 			result += s
 
-		return (hasfurigana, result)
+		return hasfurigana, result
 
 	def _process_text(self, text: str, problems: list[Problem], userdata) -> tuple[bool, str]:
+		"""
+		Adds furigana to a given text. The difference to _process_textpart() is that _process_textpart() does not apply custom word readings.
+		:param text: The text to add furigana to.
+		:param problems: The problems that have been found.
+		:param userdata: The user data added to every problem found.
+		:return: Returns a tuple (hasfurigana, text). When no furigana has been added, 'hasfurigana' is False.
+		"""
 		# because of our format, the text cannot contain brackets
 		assert self.opentag not in text and self.closetag not in text, "We have to use a different syntax"
 		assert self.customreadings_opentag not in text and self.customreadings_closetag not in text, "We have to use a different tag for custom readings"
@@ -424,13 +530,13 @@ class InstancePrv(InstanceData):
 				textparts2.append(t)
 				hasfurigana = True
 			else:
-				hasfuri, str = self._process_textpart(t, problems, userdata)
+				hasfuri, result = self._process_textpart(t, problems, userdata)
 
-				textparts2.append(str)
+				textparts2.append(result)
 
 				if hasfuri:
 					hasfurigana = True
 
 		tfinal = "".join(textparts2)
 
-		return (hasfurigana, tfinal)
+		return hasfurigana, tfinal
