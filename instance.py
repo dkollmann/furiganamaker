@@ -22,6 +22,10 @@ class KanjiReading:
 		assert isinstance(onreadings, tuple) or isinstance(onreadings, list), "Expected tuple or list for on readings. Did you for get a comma?"
 		assert isinstance(kunreadings, tuple) or isinstance(kunreadings, list), "Expected tuple or list for kun readings. Did you for get a comma?"
 
+		for kun in kunreadings:
+			assert "." not in kun, "Did you accidentially copy the '.'? Only use what is in front of the dot."
+			assert "-" not in kun, "Did you accidentially copy the '-'? Only use what is behind the '-'."
+
 		self.on = onreadings
 		self.kun = kunreadings
 
@@ -111,7 +115,7 @@ class Instance(InstancePrv):
 				k = reading.on[i]
 				r = reading.kun[i]
 
-				if is_kanji(k):
+				if len(k) == 1 and is_kanji(k):
 					repl += k + self.opentag + r + self.closetag
 				else:
 					repl += k

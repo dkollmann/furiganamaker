@@ -130,11 +130,12 @@ class InstancePrv(InstanceData):
 
 		return self._addtocache(kanji, foundreadings)
 
-	def _find_reading(self, kanji: str, katakana: str, readings: list[str], problems: list[Problem], userdata) -> bool:
+	def _find_reading(self, kanji: str, wordoriginal: str, wordkatakana: str, readings: list[str], problems: list[Problem], userdata) -> bool:
 		"""
 		Finds a reading for a kanji.
 		:param kanji: The kanji to find a reading for.
-		:param katakana: The katakana of the complete word the kanji is part of. Only needed when using mecab.
+		:param wordoriginal: The original text of the complete word.
+		:param wordkatakana: The katakana of the complete word the kanji is part of.
 		:param readings: The list of readings that have been found.
 		:param problems: The list of problems that occured.
 		:param userdata: The user data added to found problems.
@@ -151,17 +152,17 @@ class InstancePrv(InstanceData):
 			return False
 
 		# get all the readings for the kanji
-		katakanaleft = katakana
+		katakanaleft = wordkatakana
 
 		for k in kanji:
 			found = False
 
 			# check if we have an additional reading for this
-			foundreadings = self._get_kanjireading(k, katakana)
+			foundreadings = self._get_kanjireading(k, wordkatakana)
 
 			# check if we found something
 			if len(foundreadings) < 1:
-				problems.append(Problem("Failed to find any reading for \"" + k + "\".", k, userdata))
+				problems.append(Problem("Failed to find any reading for \"" + k + "\". Occurence: \"" + wordoriginal + "\".", k, userdata))
 				return False
 
 			# try to match the kanji with the reading
@@ -175,12 +176,12 @@ class InstancePrv(InstanceData):
 			# when one kanji fails we have to abort
 			if not found:
 				if showproblem:
-					problems.append(Problem("Could not match kanji \"" + k + "\" to kana \"" + katakanaleft + "\".", k, userdata))
+					problems.append(Problem("Could not match kanji \"" + k + "\" to kana \"" + katakanaleft + "\". Occurence: \"" + wordoriginal + "\".", k, userdata))
 				return False
 
 		# check if all of the reading was "consumed"
 		if len(katakanaleft) > 0:
-			problems.append(Problem("Matched all kanji of \"" + kanji + "\" to \"" + katakana + "\" but \"" + katakanaleft + "\" was left over.", kanji, userdata))
+			problems.append(Problem("Matched all kanji of \"" + kanji + "\" to \"" + wordkatakana + "\" but \"" + katakanaleft + "\" was left over. Occurence: \"" + wordoriginal + "\".", kanji, userdata))
 			return False
 
 		assert len(readings) > 0, "There should be readings here"
@@ -488,7 +489,7 @@ class InstancePrv(InstanceData):
 				if iskanji:
 					if len(katakana) > 1:
 						readings = []
-						matchedkana = self._find_reading(kanji, katakana, readings, problems, userdata)
+						matchedkana = self._find_reading(kanji, orig, katakana, readings, problems, userdata)
 
 					if matchedkana:
 						for k in range(len(kanji)):

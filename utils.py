@@ -4,6 +4,8 @@ def is_kanji(ch: str) -> bool:
 	:param ch: The character to check.
 	:return: Returns True when 'ch' is a kanji.
 	"""
+	assert len(ch) == 1, "Expected single character!"
+
 	n = ord(ch)
 
 	return (19968 <= n <= 40959) or n == 12293 or n == 12534
