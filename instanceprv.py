@@ -54,10 +54,10 @@ class InstancePrv(InstanceData):
 		self.customreadings_closetag: str = ">"
 		self.readingscache: dict[str, list[CachedReading]] = {}
 		self.customreadings: dict[str, str] = {}
-		self.counters = ["つ", "個", "本", "枚", "匹", "頭", "羽", "冊", "台", "分", "日", "年", "回", "人", "月", "時", "階", "歳",
+		self.counters = ["つ", "個", "本", "枚", "匹", "頭", "羽", "冊", "台", "分", "日", "年", "回", "人", "月", "階", "歳",
 						 "円", "箇", "缶", "巻", "曲", "切", "口", "組", "件", "軒", "語", "校", "皿", "試", "品", "社", "種",
 						 "週", "周", "色", "席", "戦", "足", "束", "玉", "段", "着", "通", "粒", "点", "度", "杯", "泊", "箱",
-						 "発", "番", "秒", "便", "袋", "部", "歩", "名", "文", "問", "話"]
+						 "発", "番", "便", "袋", "部", "歩", "名", "文", "問", "話"]
 		self.counternumbers = ("ゼロ", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二")
 
 		self._counterords = None
@@ -613,7 +613,7 @@ class InstancePrv(InstanceData):
 						if num < len(self.counternumbers):
 							newdigit = self.counternumbers[num]
 
-							a = 7777
+							s = s[:i-dlen] + newdigit + s[i:]
 					except:
 						pass
 
