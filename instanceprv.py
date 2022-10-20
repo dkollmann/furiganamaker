@@ -57,7 +57,7 @@ class InstancePrv(InstanceData):
 		self.counters = ["つ", "個", "本", "枚", "匹", "頭", "羽", "冊", "台", "分", "日", "年", "回", "人", "月", "階", "歳",
 						 "円", "箇", "缶", "巻", "曲", "切", "口", "組", "件", "軒", "語", "校", "皿", "試", "品", "社", "種",
 						 "週", "周", "色", "席", "戦", "足", "束", "玉", "段", "着", "通", "粒", "点", "度", "杯", "泊", "箱",
-						 "発", "番", "便", "袋", "部", "歩", "名", "文", "問", "話"]
+						 "発", "番", "便", "袋", "部", "歩", "名", "文", "問", "話", "ヶ"]
 		self.counternumbers = ("ゼロ", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二")
 
 		self._counterords = None
@@ -603,9 +603,9 @@ class InstancePrv(InstanceData):
 			ch = ord(s[i])
 			if ch in self._counterords:
 				# get digit length
-				dlen = InstancePrv._extractdigit(text, i - 1)
+				dlen = InstancePrv._extractdigit(s, i - 1)
 				if dlen > 0:
-					digit = text[i-dlen:i]
+					digit = s[i-dlen:i]
 
 					try:
 						num = int(digit)
